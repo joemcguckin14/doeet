@@ -1,5 +1,9 @@
-name: Build and Publish
-on: [push]
+name: Build and Publish Final
+on:
+  push:
+    tags:
+      - '**'
+    branches:
 jobs:
   build-package:
     name: Build React
@@ -32,16 +36,4 @@ jobs:
       - name: Build
         run: npm run build
       - name: Publish Final Version
-        on:
-          push:
-            tags:
-              - '**'
-            branches:
         run: npm publish
-      - name: Publish Beta Version
-        on:
-          push:
-            tags:
-            branches:
-              - '**'
-        run: npm publish --tag beta.$GITHUB_REF.$GITHUB_RUN_ID
