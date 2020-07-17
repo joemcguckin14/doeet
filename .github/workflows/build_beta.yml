@@ -2,8 +2,8 @@ name: Build and Publish Final
 on:
   push:
     tags:
-      - '**'
     branches:
+      - '**'
 jobs:
   build-package:
     name: Build React
