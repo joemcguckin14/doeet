@@ -36,6 +36,6 @@ jobs:
       - name: Build
         run: npm run build
       - name: Publish Beta Version
-        run: BRANCH_NAME=${GITHUB_REF/refs\/heads\//} npm publish --tag b-${BRANCH_NAME/\//-}-$GITHUB_RUN_ID
+        run: export BRANCH_NAME=${GITHUB_REF/refs\/heads\//} && npm publish --tag b-${BRANCH_NAME/\//-}-$GITHUB_RUN_ID
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_API_TOKEN }}
