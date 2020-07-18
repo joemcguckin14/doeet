@@ -1,4 +1,4 @@
-name: Build and Publish Final
+name: Build and Publish Beta
 on:
   push:
     tags:
