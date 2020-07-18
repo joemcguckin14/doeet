@@ -1,4 +1,4 @@
-name: Build and Publish Beta
+name: Build
 on:
   push:
     tags:
@@ -6,7 +6,7 @@ on:
       - '**'
 jobs:
   build-package:
-    name: Build and Publish
+    name: Build
     runs-on: ubuntu-18.04
     strategy:
       matrix:
@@ -35,7 +35,3 @@ jobs:
         run: npm install
       - name: Build
         run: npm run build
-      - name: Publish Beta Version
-        run: export BRANCH_NAME=${GITHUB_REF/refs\/heads\//} && npm publish --tag b-${BRANCH_NAME/\//-}-$GITHUB_RUN_ID
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_API_TOKEN }}
