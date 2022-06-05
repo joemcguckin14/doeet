@@ -13,14 +13,6 @@ import { Message } from '../../interfaces';
   }
 ])
 export class TestController {
-  //   @Type({
-  //     type: 'test_event',
-  //     middleware: [
-  //       (message): void => {
-  //         message.content = 'only this one';
-  //       }
-  //     ]
-  //   })
   @Type('test_event')
   public doSomething(message: Message): void {
     console.log('Handling', message);
