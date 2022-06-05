@@ -1,0 +1,224 @@
+name: Build
+on: [push]
+jobs:
+  install:
+    name: Install
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Use Node.js 14.19.0
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.19.0'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Cache Node Modules
+        uses: actions/cache@v1
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Install
+        run: npm i
+  audit:
+    name: Audit
+    runs-on: ubuntu-18.04
+    needs: install
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Use Node.js 14.19.0
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.13.0'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Cache Node Modules
+        uses: actions/cache@v1
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Lint
+        run: npm run lint
+      - name: Prettier
+        run: npm run prettier
+  test:
+    name: Test
+    runs-on: ubuntu-18.04
+    needs: install
+    strategy:
+      matrix:
+        node-version: [14.19.0, 14.17.5, 16.7.0]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: 'https://registry.npmjs.org'
+      - name: Cache Node Modules
+        uses: actions/cache@v1
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Test
+        run: npm run test
+      - name: Upload NYC Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: nyc-output
+          path: .nyc_output
+      - name: Upload Coverage Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage
+          path: coverage
+  build:
+    name: Build
+    runs-on: ubuntu-18.04
+    needs: install
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Use Node.js 14.19.0
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.19.0'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Cache Node Modules
+        uses: actions/cache@v1
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Build
+        run: npm run build
+      - name: Upload Lib
+        uses: actions/upload-artifact@v2
+        with:
+          name: lib
+          path: lib
+  version_bump:
+    name: Publish Beta Version
+    runs-on: ubuntu-18.04
+    needs:
+      - build
+      - test
+      - audit
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Use Node.js 14.19.0
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.19.0'
+      - name: Resolve Branch type
+        run: |
+          # Resolve branch type
+          if [[ ${{ github.ref }} = 'refs/heads/development' ]]; then
+            export branch_type=dev
+          elif [[ ${{ github.event.ref }} =~ ^refs\/heads\/release\/[0-9]{4}-[0-9]{2}-[0-9]{2}[0-9,a-z,A-Z,-]{1,25}$ ]]; then
+            export branch_type=rc
+          fi
+          #  Make this available in the future
+          echo "branch_type=$branch_type" >> $GITHUB_ENV
+          echo "Branch resolved as: $branch_type"
+      - name: Perform Beta Version Bump
+        run: |
+          echo "Branch resolved as: $branch_type"
+          # Check for empty branch_type
+          if [[ -z "$branch_type" ]]; then
+            echo "Branches of this type will not be published... skipping"
+          else
+            # Configure the user to push the change
+            git config user.name github-actions
+            git config user.email github-actions@github.com
+            # Prevents a tag from being created
+            npm config set git-tag-version false
+            # Bump the minor version
+            version=$(npm version prerelease --preid=$branch_type)
+            echo "Version Bump: $version"
+            # Push the changes to the branch
+            git add package.json package-lock.json
+            git commit -m "Version bump: $version"
+            git push
+          fi
+      - name: Setup Node For Publishing
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.19.0'
+          registry-url: 'https://registry.npmjs.org'
+          scope: doinoauth2
+      - name: Download build directory for publish
+        uses: actions/download-artifact@master
+        with:
+          name: lib
+          path: lib
+      - name: Publish Beta Version
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # Resolve branch type
+          echo "Branch resolved as: $branch_type"
+          if [[ "$branch_type" = 'dev' ]]; then
+            echo "Publishing with tag dev"
+            npm publish --tag dev
+          elif [[ "$branch_type" = 'rc' ]]; then
+            echo "Publishing with tag beta"
+            npm publish --tag beta
+          else
+            echo "Branches of this type will not be published... skipping"
+          fi
+  publish:
+    name: Publish
+    runs-on: ubuntu-18.04
+    if: ${{ github.ref == 'refs/heads/master' }}
+    needs:
+      - build
+      - test
+      - audit
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Use Node.js 14.19.0
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.19.0'
+          registry-url: 'https://registry.npmjs.org'
+          scope: doinoauth2
+      - name: Download build directory for publish
+        uses: actions/download-artifact@master
+        with:
+          name: lib
+          path: lib
+      - name: Publish Latest
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm publish --tag latest
