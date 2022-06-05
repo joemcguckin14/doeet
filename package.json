@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "test": "mocha -r ts-node/register src '**/*.test.{ts,tsx}'",
+    "test": "mocha -r ts-node/register src '**/*.spec.{ts,tsx}'",
     "lint": "eslint '*/**/*.{js,ts,tsx}'",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier  ."
