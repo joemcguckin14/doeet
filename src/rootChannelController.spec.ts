@@ -1,7 +1,14 @@
 import { expect } from 'chai';
+import RootChannelController from './rootChannelController';
 
-describe('test', () => {
-  it('fake test', () => {
-    expect(true).to.be.true;
+describe('RootChannelController', () => {
+  let fixture: RootChannelController;
+  describe('addControllers', () => {
+    beforeEach(() => {
+      fixture = new RootChannelController();
+    });
+    it('should add controllers', () => {
+      expect(true).to.be.true;
+    });
   });
 });

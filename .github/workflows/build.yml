@@ -141,7 +141,7 @@ jobs:
       - name: Resolve Branch type
         run: |
           # Resolve branch type
-          if [[ ${{ github.ref }} = 'refs/heads/development' ]]; then
+          if [[ ${{ github.ref }} = 'refs/heads/dev' ]]; then
             export branch_type=dev
           elif [[ ${{ github.event.ref }} =~ ^refs\/heads\/release\/[0-9]{4}-[0-9]{2}-[0-9]{2}[0-9,a-z,A-Z,-]{1,25}$ ]]; then
             export branch_type=rc
