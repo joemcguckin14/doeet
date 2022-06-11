@@ -12,12 +12,9 @@ export interface DescriptorWithType extends PropertyDescriptor {
   type?: string;
 }
 
-export interface TypeOptionsObject {
-  type: string;
+export interface TypeOptions {
   middleware?: HandlerFunction[];
 }
-
-export type TypeOptions = string | TypeOptionsObject;
 
 export interface Controller {
   channel: string;

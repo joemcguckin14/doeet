@@ -4,18 +4,18 @@ import {
   Constructor,
   DescriptorWithType
 } from './interfaces';
+import { Utils } from './utils';
 
 /**
  *
- * Marks a class as a Doeet controller for the given channel
- *
- * NOTE: Multiple controllers can be registered to the same channel
+ * Marks a class as a Doeet controller for the given channel. Multiple controllers can be registered to the same channel
  *
  * @example Simple controller that has one type handler
  * ```ts
  * @ChannelController('my-channel')
  * class MyChannelController {
  *    @Type('my-type')
+ *    myTypeHandler()  {}
  * }
  * ```
  *
@@ -50,31 +50,30 @@ export const ChannelMiddleware = (newMiddleware: HandlerFunction[]) => {
         this.middleware && this.middleware !== []
           ? // @ts-ignore: This prop could exist from doubling annotations
             // @ts-ignore: This prop could exist from doubling annotations
-            [...this.middleware, ...newMiddleware]
+            [...newMiddleware, ...this.middleware]
           : newMiddleware;
     };
   };
 };
 
-export const Type = (options: TypeOptions): MethodDecorator => {
+/**
+ * Marks a function as a handler for the given type
+ *
+ * @param type
+ * @param options @{link TypeOptions}
+ * @returns
+ */
+export const Type = (type: string, options?: TypeOptions): MethodDecorator => {
   return (
     controller: any,
     name: PropertyKey,
     descriptor: DescriptorWithType
   ): void => {
-    const type = typeof options === 'string' ? options : options.type;
     descriptor.type = type;
     if (!controller.handlers) {
       controller.handlers = [];
     }
     controller.handlers.push([type, name]);
-    if (typeof options !== 'string' && options.middleware) {
-      if (!controller.typeMiddleware) {
-        controller.typeMiddleware = [];
-      }
-      options.middleware.forEach((middlewareFn: HandlerFunction) => {
-        controller.typeMiddleware.push([type, middlewareFn]);
-      });
-    }
+    Utils.addTypeMiddleware(controller, type, options?.middleware);
   };
 };

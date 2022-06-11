@@ -1,5 +1,5 @@
 import { Message, HandlerFunction, Controller, Handler } from './interfaces';
-import { buildHandlerKey } from './utils';
+import { Utils } from './utils';
 
 export default class RootChannelController {
   private handlers: Map<string, Handler[]>;
@@ -31,7 +31,7 @@ export default class RootChannelController {
     controller.handlers.forEach((handlerSet: any) => {
       const type: string = handlerSet[0];
       const functionName: string = handlerSet[1];
-      const key: string = buildHandlerKey(controller.channel, type);
+      const key: string = Utils.buildHandlerKey(controller.channel, type);
       const handler: Handler = { controller, name: functionName, key };
       const existingValue: Handler[] | undefined = this.handlers.get(key);
       if (existingValue) {
@@ -61,7 +61,7 @@ export default class RootChannelController {
     controller.typeMiddleware.forEach((middlewareSet: any) => {
       const type = middlewareSet[0];
       const middleware = middlewareSet[1];
-      const key = buildHandlerKey(controller.channel, type);
+      const key = Utils.buildHandlerKey(controller.channel, type);
       const existingValue = this.middleware.get(key);
       if (existingValue) {
         this.middleware.set(key, [...middleware, ...existingValue]);
@@ -73,7 +73,7 @@ export default class RootChannelController {
 
   public handle(message: Message, ...args: any[]): void {
     const { channel, type } = message;
-    const key = buildHandlerKey(channel, type);
+    const key = Utils.buildHandlerKey(channel, type);
     this.applyMiddleware(key, message, ...args);
     this.performHandlers(key, message, ...args);
   }
