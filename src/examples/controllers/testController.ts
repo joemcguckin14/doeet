@@ -1,4 +1,8 @@
-import { ChannelController, Type, ChannelMiddleware } from '../../decorators';
+import {
+  ChannelController,
+  Type,
+  ChannelMiddleware
+} from '../../decorators/ChannelController';
 import { Message } from '../../interfaces';
 
 @ChannelController('test')
