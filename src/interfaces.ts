@@ -6,7 +6,7 @@ export interface Message {
 
 export type HandlerFunction = (message: Message, ...args: any[]) => void;
 
-export type Constructor = { new (...args: any[]): {} };
+export type Constructor = { new (...args: any[]): any };
 
 export interface DescriptorWithType extends PropertyDescriptor {
   type?: string;

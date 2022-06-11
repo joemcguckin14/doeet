@@ -21,6 +21,6 @@ module.exports = {
   },
   rules: {
     '@typescript-eslint/no-explicit-any': OFF,
-    '@typescript-eslint/ban-ts-ignore': OFF
+    '@typescript-eslint/ban-ts-comment': WARN
   }
 };
